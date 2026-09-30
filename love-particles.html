@@ -13,25 +13,35 @@
 <script>
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
+
+// --- 电脑大屏适配核心代码 ---
+// 1. 设定一个基准分辨率（16:9），保证在任何屏幕上都按这个比例缩放
 const BASE_WIDTH = 1920;
 const BASE_HEIGHT = 1080;
+
+// 2. 让canvas铺满整个屏幕，并监听窗口变化
 function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 }
 window.addEventListener('resize', resize);
-resize(); 
+resize(); // 初始化调用
+
+// 爱心参数方程
 function heart(t) {
     const x = 16 * Math.pow(Math.sin(t), 3);
     const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
     return {x, y};
 }
+
+// 粒子类
 class Particle {
     constructor(x, y) {
         this.x = x;
         this.y = y;
         this.vx = Math.random() * 2 - 1;
         this.vy = Math.random() * -2 - 0.5;
+        // 修复颜色模板字符串，确保是粉紫色
         this.color = `rgba(${Math.random()*55 + 200}, ${Math.random()*100 + 100}, ${Math.random()*55 + 200}, 1)`; 
         this.life = Math.random() * 100 + 50;
         this.maxLife = this.life;
@@ -58,6 +68,9 @@ let particles = [];
 
 function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // --- 核心适配逻辑 ---
+    // 计算缩放比例，让爱心在任何尺寸的屏幕上都保持合适大小
     const scale = Math.min(canvas.width / BASE_WIDTH, canvas.height / BASE_HEIGHT) * 35;
 
     // 每帧生成新粒子（沿爱心轮廓）
@@ -68,22 +81,34 @@ function animate() {
         const py = canvas.height/2 + y * scale;
         particles.push(new Particle(px, py));
     }
+
+    // 更新并绘制粒子
     for (let i=particles.length-1; i>=0; i--) {
         const p = particles[i];
         p.update();
         p.draw();
         if (p.life <= 0) particles.splice(i, 1);
     }
+
+    // --- 文字适配 (统一大小版) ---
+    // 动态计算字体大小，确保在宽屏上文字足够大
     const fontSize = Math.min(canvas.width, canvas.height) / 10; 
     
     ctx.font = `bold ${fontSize}px "Microsoft YaHei", Arial`;
     ctx.fillStyle = 'white';
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle'; 
+    ctx.textBaseline = 'middle'; // 设置垂直居中对齐基准
+
+    // 计算行高（通常是字号的 1.2 倍）
     const lineHeight = fontSize * 1.2; 
+
+    // 绘制第一行："最好的"
+    // Y轴位置：屏幕中心 减去 半个行高
     ctx.fillText('岁岁年年', canvas.width/2, canvas.height/2 - lineHeight/2);
 
-   anvas.height/2 + lineHeight/2);
+    // 绘制第二行："大数据2班"
+    // Y轴位置：屏幕中心 加上 半个行高
+    ctx.fillText('共你朝夕', canvas.width/2, canvas.height/2 + lineHeight/2);
 
     requestAnimationFrame(animate);
 }
